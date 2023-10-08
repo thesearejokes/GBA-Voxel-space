@@ -1,3 +1,11 @@
+# Hello, I'm a fork!
+This is a fork of [juanmv94/GameBoy-Advance-3D-voxel-space-demo](https://github.com/juanmv94/GameBoy-Advance-3D-voxel-space-demo) that is made with the intent of studying the inner workings of this probably obscure home project. 
+Mostly translating the comments and variables, documenting compilation process and improving the code if I can.
+
+I could've just made an engine from scratch, but non the less I found an opportunity to work with someone else's code on my own will, and most importantly learning github.
+
+Everything below is copy of original [README.md](https://github.com/juanmv94/GameBoy-Advance-3D-voxel-space-demo/blob/master/README.md).
+
 # GameBoy-Advance-3D-voxel-space-demo
 A custom 3D voxel space engine tech demo for the GameBoy Advance written in C compilable with [DevKitARM](https://devkitpro.org/)
 ![emulator screenshot](https://1.bp.blogspot.com/-SwvNjzXt0g8/WwbdIHc4OnI/AAAAAAAAAm0/NQX5AFOm5zYo5uImaia6Xj_6eIBsNr9wwCLcBGAs/s1600/v2.png)
@@ -36,7 +44,7 @@ The Voxel Space technology might be still [patented](https://patents.justia.com/
 
 ## Links
 
-Full blog article:
+Full blog article by juanmv94 on their main branch:
 <http://tragicomedy-hellin.blogspot.com/2018/04/motor-3d-para-gameboy-advance.html>
 
 GBADEV.ORG link: <http://gbadev.org/demos.php?showinfo=1481>
