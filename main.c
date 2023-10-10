@@ -1,6 +1,6 @@
-#include "gba.h"
-#include "gfx.h"
-#include "parametros.h"
+#include "gba.h"	//Local GBA library, holds vital for gba development code.
+#include "gfx.h"	//Local GFX library, makes a lot of extern consts.
+#include "parametros.h"	//Local parameter file, containins some defines, for instance mode 5 resolution.
 #define IWRAM_CODE __attribute__((section(".iwram"), long_call))
 
 #define dim_mapa 1024
@@ -28,8 +28,8 @@ u16 tecla_pulsada=0;
 int posx=0,posy=0,posz=2;
 u8 posr=0;
 
-IWRAM_CODE void actualiza_punterosalturas()
-{
+/*updating pointershights*/	//translation might not be accurate
+IWRAM_CODE void actualiza_punterosalturas(){
 	int i,sum=((maxstep-minstep+1)<<8);
 	punterosalturas[0]=matrizalturas;
 	for (i=1;i<numalturas;i++)
@@ -37,9 +37,10 @@ IWRAM_CODE void actualiza_punterosalturas()
 		punterosalturas[i]=punterosalturas[i-1]+sum;
 	}
 }
+/*end of updating pointershights*/
 
-IWRAM_CODE void DrawVerticalLine(u8 x,u8 y,u8 y2,u16 color)
-{
+/*drawing vertical lines*/
+IWRAM_CODE void DrawVerticalLine(u8 x,u8 y,u8 y2,u16 color){
 	u16 *base= VRAM+x;
 	u16 *ini;
 	u16 *fin= base+tempgfxp[y2];
@@ -48,6 +49,8 @@ IWRAM_CODE void DrawVerticalLine(u8 x,u8 y,u8 y2,u16 color)
 		*ini=color;
 	}
 }
+/*end of drawing vertical lines*/
+
 /*
 int fx(int x, int y) //rotacion
 {
@@ -112,13 +115,13 @@ int fy(int x, int y) //rotacion
 }
 */
 
-IWRAM_CODE void mueve_pantalla_step(int step)
-{
-			if (((REG_DISPSTAT)&1)==0) return;
-			if (tecla_pulsada&KEY_B)
-			{REG_BG2Y=INI_DY+(step<<1);return;}
-			else if (tecla_pulsada&KEY_A)
-			{REG_BG2Y=INI_DY-(step<<1);return;}
+/*basic move controls*/
+IWRAM_CODE void mueve_pantalla_step(int step){
+			if (((REG_DISPSTAT)&1)==0) return;	//	Move contorols (excluding angle)
+			if (tecla_pulsada&KEY_B)		//   ^        a - MOVE ABSOLUTE UP
+			{REG_BG2Y=INI_DY+(step<<1);return;}	// <   >   b - MOVE ABSOLUTE DOWN
+			else if (tecla_pulsada&KEY_A)		//   V  } MOVE RELATIVE TO ANGLE
+			{REG_BG2Y=INI_DY-(step<<1);return;}	//
 			if (tecla_pulsada&KEY_DOWN)
 			{REG_BG2X=INI_DX-(step);REG_BG2Y=INI_DY-(step>>2);REG_BG2PA=INI_X+(step>>7);REG_BG2PD=INI_Y+(step>>7);}
 			else if (tecla_pulsada&KEY_UP)
@@ -126,9 +129,17 @@ IWRAM_CODE void mueve_pantalla_step(int step)
 			if (tecla_pulsada&KEY_LEFT){if (tecla_pulsada&KEY_UP) REG_BG2X=INI_DX; else REG_BG2X=INI_DX-step;}
 			else if (tecla_pulsada&KEY_RIGHT){ if (tecla_pulsada&KEY_DOWN) REG_BG2X=INI_DX; else REG_BG2X=INI_DX+step;}
 }
+/*end of basic move controls*/
 
-IWRAM_CODE void render0()
-{
+/*renders*/
+/*
+	In a nutshell, it's just a lot of boilerplate with one thing changed
+ 	being the formula fot calculation, marked as "//the only change".
+  	The formulas change to accomodate for different viewing angles.
+   	At least that's my understanding and I hope it's correct.
+  	I better relocate that into its own lib if I have the time.
+*/
+IWRAM_CODE void render0(){
 	u8 alturas[MODE5_WIDTH];
 	int step,anchostep,i,x,y,xf,yf,alt,tmpalturas;
 	u16 *punterox;
@@ -137,14 +148,14 @@ IWRAM_CODE void render0()
 	{
 		tmpalturas=(step-minstep);
 		mueve_pantalla_step(tmpalturas);
-		punterox=matrizx+MODE5_WIDTH*tmpalturas;	//Solo para version rapida
-		tmpalturas<<=8;					//*256		//Solo para version rapida
+		punterox=matrizx+MODE5_WIDTH*tmpalturas;	//Solo para version rapida	//Only for quick version
+		tmpalturas<<=8;					//*256		//Solo para version rapida	//Only for quick version
 		for (i=0;i<MODE5_WIDTH;i++)
 		{
 			x=posx+punterox[i];
 			y=posy+step;
 			
-			///////único cambio//
+			///////único cambio//	//the only change
 			xf=x&(dim_mapa-1);
 			yf=y&(dim_mapa-1);
 			//////////////////
@@ -159,8 +170,7 @@ IWRAM_CODE void render0()
 	}
 }
 
-IWRAM_CODE void render1()
-{
+IWRAM_CODE void render1(){
 	u8 alturas[MODE5_WIDTH];
 	int step,anchostep,i,x,y,xf,yf,alt,tmpalturas;
 	u16 *punterox;
@@ -176,7 +186,7 @@ IWRAM_CODE void render1()
 			x=posx+punterox[i];
 			y=posy+step;
 			
-			///////único cambio//
+			///////único cambio//	//the only change
 			xf=(-y/2 + x)&(dim_mapa-1);
 			yf=(y + x/2)&(dim_mapa-1);
 			//////////////////
@@ -191,8 +201,7 @@ IWRAM_CODE void render1()
 	}
 }
 
-IWRAM_CODE void render2()
-{
+IWRAM_CODE void render2(){
 	u8 alturas[MODE5_WIDTH];
 	int step,anchostep,i,x,y,xf,yf,alt,tmpalturas;
 	u16 *punterox;
@@ -208,7 +217,7 @@ IWRAM_CODE void render2()
 			x=posx+punterox[i];
 			y=posy+step;
 			
-			///////único cambio//
+			///////único cambio//	//the only change
 			xf=(-y + x/2)&(dim_mapa-1);
 			yf=(y/2 + x)&(dim_mapa-1);
 			//////////////////
@@ -223,8 +232,7 @@ IWRAM_CODE void render2()
 	}
 }
 
-IWRAM_CODE void render3()
-{
+IWRAM_CODE void render3(){
 	u8 alturas[MODE5_WIDTH];
 	int step,anchostep,i,x,y,xf,yf,alt,tmpalturas;
 	u16 *punterox;
@@ -240,7 +248,7 @@ IWRAM_CODE void render3()
 			x=posx+punterox[i];
 			y=posy+step;
 			
-			///////único cambio//
+			///////único cambio//	//the only change
 			xf=-y&(dim_mapa-1);
 			yf=x&(dim_mapa-1);
 			//////////////////
@@ -255,8 +263,7 @@ IWRAM_CODE void render3()
 	}
 }
 
-IWRAM_CODE void render4()
-{
+IWRAM_CODE void render4(){
 	u8 alturas[MODE5_WIDTH];
 	int step,anchostep,i,x,y,xf,yf,alt,tmpalturas;
 	u16 *punterox;
@@ -272,7 +279,7 @@ IWRAM_CODE void render4()
 			x=posx+punterox[i];
 			y=posy+step;
 			
-			///////único cambio//
+			///////único cambio//	//the only change
 			xf=(-y - x/2)&(dim_mapa-1);
 			yf=(-y/2 + x)&(dim_mapa-1);
 			//////////////////
@@ -287,8 +294,7 @@ IWRAM_CODE void render4()
 	}
 }
 
-IWRAM_CODE void render5()
-{
+IWRAM_CODE void render5(){
 	u8 alturas[MODE5_WIDTH];
 	int step,anchostep,i,x,y,xf,yf,alt,tmpalturas;
 	u16 *punterox;
@@ -304,7 +310,7 @@ IWRAM_CODE void render5()
 			x=posx+punterox[i];
 			y=posy+step;
 			
-			///////único cambio//
+			///////único cambio//	//the only change	//yes, literally
 			xf=(-y/2 - x)&(dim_mapa-1);
 			yf=(-y + x/2)&(dim_mapa-1);
 			//////////////////
@@ -319,8 +325,7 @@ IWRAM_CODE void render5()
 	}
 }
 
-IWRAM_CODE void render6()
-{
+IWRAM_CODE void render6(){
 	u8 alturas[MODE5_WIDTH];
 	int step,anchostep,i,x,y,xf,yf,alt,tmpalturas;
 	u16 *punterox;
@@ -336,7 +341,7 @@ IWRAM_CODE void render6()
 			x=posx+punterox[i];
 			y=posy+step;
 			
-			///////único cambio//
+			///////único cambio//	//the only change
 			xf=-x&(dim_mapa-1);
 			yf=-y&(dim_mapa-1);
 			//////////////////
@@ -351,8 +356,7 @@ IWRAM_CODE void render6()
 	}
 }
 
-IWRAM_CODE void render7()
-{
+IWRAM_CODE void render7(){
 	u8 alturas[MODE5_WIDTH];
 	int step,anchostep,i,x,y,xf,yf,alt,tmpalturas;
 	u16 *punterox;
@@ -368,7 +372,7 @@ IWRAM_CODE void render7()
 			x=posx+punterox[i];
 			y=posy+step;
 			
-			///////único cambio//
+			///////único cambio//	//the only change
 			xf=(y/2 - x)&(dim_mapa-1);
 			yf=(-y - x/2)&(dim_mapa-1);
 			//////////////////
@@ -383,8 +387,7 @@ IWRAM_CODE void render7()
 	}
 }
 
-IWRAM_CODE void render8()
-{
+IWRAM_CODE void render8(){
 	u8 alturas[MODE5_WIDTH];
 	int step,anchostep,i,x,y,xf,yf,alt,tmpalturas;
 	u16 *punterox;
@@ -400,7 +403,7 @@ IWRAM_CODE void render8()
 			x=posx+punterox[i];
 			y=posy+step;
 			
-			///////único cambio//
+			///////único cambio//	//the only change
 			xf=(y - x/2)&(dim_mapa-1);
 			yf=(-y/2 - x)&(dim_mapa-1);
 			//////////////////
@@ -415,8 +418,7 @@ IWRAM_CODE void render8()
 	}
 }
 
-IWRAM_CODE void render9()
-{
+IWRAM_CODE void render9(){
 	u8 alturas[MODE5_WIDTH];
 	int step,anchostep,i,x,y,xf,yf,alt,tmpalturas;
 	u16 *punterox;
@@ -432,7 +434,7 @@ IWRAM_CODE void render9()
 			x=posx+punterox[i];
 			y=posy+step;
 			
-			///////único cambio//
+			///////único cambio//	//the only change
 			xf=y&(dim_mapa-1);
 			yf=-x&(dim_mapa-1);
 			//////////////////
@@ -447,8 +449,7 @@ IWRAM_CODE void render9()
 	}
 }
 
-IWRAM_CODE void render10()
-{
+IWRAM_CODE void render10(){
 	u8 alturas[MODE5_WIDTH];
 	int step,anchostep,i,x,y,xf,yf,alt,tmpalturas;
 	u16 *punterox;
@@ -464,7 +465,7 @@ IWRAM_CODE void render10()
 			x=posx+punterox[i];
 			y=posy+step;
 			
-			///////único cambio//
+			///////único cambio//	//the only change
 			xf=(y + x/2)&(dim_mapa-1);
 			yf=(y/2 - x)&(dim_mapa-1);
 			//////////////////
@@ -479,8 +480,7 @@ IWRAM_CODE void render10()
 	}
 }
 
-IWRAM_CODE void render11()
-{
+IWRAM_CODE void render11(){
 	u8 alturas[MODE5_WIDTH];
 	int step,anchostep,i,x,y,xf,yf,alt,tmpalturas;
 	u16 *punterox;
@@ -496,7 +496,7 @@ IWRAM_CODE void render11()
 			x=posx+punterox[i];
 			y=posy+step;
 			
-			///////único cambio//
+			///////único cambio//	//the only change
 			xf=(y/2 + x)&(dim_mapa-1);
 			yf=(y - x/2)&(dim_mapa-1);
 			//////////////////
@@ -510,14 +510,13 @@ IWRAM_CODE void render11()
 		}
 	}
 }
-
 const r rend[12]={&render0,&render1,&render2,&render3,&render4,&render5,&render6,&render7,&render8,&render9,&render10,&render11};
+/*end of renders*/
 
-void incr_a()
-{
-	int tmpx=posx, tmpy=posy;
-	switch (posr)
-	{
+/*angle handling*/
+void incr_a(){				//	Angle controls
+	int tmpx=posx, tmpy=posy;	// L - INCREACE ANGLE (counterclockwise)
+	switch (posr){			// R - DECREACE ANGLE (clockwise)
 		case 1:
 		case 4:
 		case 7:
@@ -541,11 +540,9 @@ void incr_a()
 	if (posr>11) posr=0;
 }
 
-void decr_a()
-{
+void decr_a(){
 	int tmpx=posx, tmpy=posy;
-	switch (posr)
-	{
+	switch (posr){
 		case 1:
 		case 4:
 		case 7:
@@ -568,13 +565,14 @@ void decr_a()
 	posr--;
 	if (posr>11) posr=11;
 }
+/*end of angle handling*/
 
-IWRAM_CODE int main()
-{
+/*main*/
+IWRAM_CODE int main(){
 	char x,y;
 	int i;
 	
-	//Se puede hacer constante
+	//Se puede hacer constante	//This can be made constant
 	tempgfxp=malloc(4*(MODE5_HEIGHT+1));
 	for (i=0;i<=MODE5_HEIGHT;i++) tempgfxp[i]=(MODE5_WIDTH*(MODE5_HEIGHT-i));
 	
@@ -582,12 +580,14 @@ IWRAM_CODE int main()
 	actualiza_punterosalturas();
 	REG_DISPCNT_L = BG2_ENABLE | MODE5;
 	
-	REG_BG2PA=INI_X;	//escalado horizontal;
-	REG_BG2PD=INI_Y;	//escalado vertical;
-	REG_BG2X=INI_DX;	//desp horizontal
-	REG_BG2Y=10;		//desp vert
-	while (1)
-	{
+	REG_BG2PA=INI_X;	//escalado horizontal;	//horizontal scrolling
+	REG_BG2PD=INI_Y;	//escalado vertical;	//vertical scrolling
+	REG_BG2X=INI_DX;	//desp horizontal	//horizontal (desplacement? needs better translation.)
+	REG_BG2Y=10;		//desp vert		//vertical
+
+	/*infinite loop*/
+	while (1){
+		/*screen drawing*/
 		memset(VRAM,0x62,MODE5_WIDTH*MODE5_HEIGHT);	//memcpy(VRAM,rawback,MODE5_WIDTH*MODE5_HEIGHT);
 		rend[posr]();
 		while (!((REG_DISPSTAT)&1));
@@ -598,7 +598,9 @@ IWRAM_CODE int main()
 		REG_DISPCNT_L^=BACK_BUFFER_FLAG;
 		
 		VRAM= (VRAM==BACK_BUFFER) ? FRONT_BUFFER : BACK_BUFFER;
-		
+		/*end of screen drawing*/
+
+		/*pressed buttons check*/
 		while ((tecla_pulsada=INPUT)==0);
 
 		if (tecla_pulsada&KEY_L) {incr_a();}
@@ -610,7 +612,8 @@ IWRAM_CODE int main()
 		else if (tecla_pulsada&KEY_UP){ posy+=3;}
 		if (tecla_pulsada&KEY_LEFT){ posx-=2;}
 		else if (tecla_pulsada&KEY_RIGHT){ posx+=2;}
-		
-	}
-	//while (1);
+		/*end of pressed buttons check*/
+		}
+	/*end of infinite loop*/
 }
+/*end of main*/
